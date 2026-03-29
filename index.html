@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smalland: Survive the Wilds Save Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="pako.min.js"></script>
+</head>
+<body>
+    <div class="background-mesh"></div>
+    <div class="container">
+        <header class="app-header">
+            <h1 class="glow-text">Smalland <span class="subtitle">Save Editor</span></h1>
+            <p class="desc">A lightweight, offline browser-based editor for akxfiles.plr</p>
+            <div class="privacy-notice">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                This editor is 100% offline. Your save data is processed locally and never uploaded to any server.
+            </div>
+        </header>
+
+        <!-- Dropzone Section -->
+        <div id="dropzone" class="dropzone-area">
+            <div class="drop-content">
+                <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h2>Drag & Drop your <span class="accent-text">.plr</span> file here</h2>
+                <p>Or click to browse files</p>
+                <input type="file" id="file-input" accept=".plr" hidden />
+            </div>
+        </div>
+
+        <!-- Editor View Section -->
+        <main id="editor-view" class="editor-container hidden">
+            <!-- Header row with info and export button -->
+            <!-- Header row with info -->
+            <div class="editor-header">
+                <div class="char-info">
+                    <div class="detail-group">
+                        <label>Player Name</label>
+                        <input type="text" id="edit-player-name" class="premium-input" style="width: 200px;" />
+                    </div>
+                    <div class="detail-group">
+                        <label>Last Saved</label>
+                        <span id="save-date-display" class="value-text"></span>
+                    </div>
+                </div>
+                
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="tab-inventory">Inventory & Stats</button>
+                    <button class="tab-btn" data-tab="tab-creatures">Creatures</button>
+                </div>
+
+                <div class="actions">
+                    <button id="export-btn" class="glow-btn">
+                        <svg viewBox="0 0 24 24" fill="none" class="icon" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="17 21 17 13 7 13 7 21" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="7 3 7 8 15 8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Export Save
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB PANE: INVENTORY -->
+            <div id="tab-inventory" class="tab-pane active" style="display:block;">
+                <div class="editor-grid">
+                <!-- Inventory Column -->
+                <div class="glass-card full-width">
+                    <div class="card-header">
+                        <h3>Inventory</h3>
+                        <span id="inventory-count" class="badge">0 items</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%">Item Class</th>
+                                    <th style="width: 20%">Value</th>
+                                    <th style="width: 30%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-list">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Stats / Progression Card -->
+                <div class="glass-card split-col">
+                    <div class="card-header">
+                        <h3>Character Progession</h3>
+                    </div>
+                    <div class="stats-form">
+                        <div class="form-group">
+                            <label>Level</label>
+                            <input type="number" id="edit-level" class="premium-input" min="1" max="100"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Experience</label>
+                            <input type="number" id="edit-exp" class="premium-input" min="0" />
+                        </div>
+                        <div class="form-group" style="margin-top:0.5rem">
+                            <label>Attributes Overview</label>
+                            <div id="character-attributes-area" style="display:flex; flex-direction:column; gap:0.5rem; background:rgba(0,0,0,0.2); padding:0.5rem; border-radius:8px;">
+                                <!-- injected -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Character Equipment Card -->
+                <div class="glass-card split-col">
+                    <div class="card-header">
+                        <h3>Equipment IDs</h3>
+                    </div>
+                    <div class="equipment-form" id="equipment-list">
+                        <div id="equipment-render-area" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End Tab Inventory -->
+
+            <!-- TAB PANE: CREATURES -->
+            <div id="tab-creatures" class="tab-pane" style="display:none;">
+                <div class="glass-card full-width">
+                    <div class="card-header">
+                        <h3>Tamed Creatures</h3>
+                        <span id="creatures-count" class="badge">0 items</span>
+                    </div>
+                    <div id="creatures-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; padding-top: 1rem;">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div id="toast-container"></div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
