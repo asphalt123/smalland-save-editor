@@ -1,0 +1,23 @@
+# Editor temporary save data
+save.json
+*.plr
+*_repacked.plr
+*.sav
+
+# Diagnostic & Test Scripts
+explore*.js
+inspect_plr.js
+check.py
+decompress.py
+pack.py
+extract_json.py
+test_playwright.js
+test_repack.plr
+package-lock.json
+package.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+node_modules/*
