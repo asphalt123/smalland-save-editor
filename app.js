@@ -25,7 +25,6 @@ let loadedFileName = '';
 let headerData = null; // Buffer before zlib chunks
 let tailData = null;   // Buffer after zlib chunks
 let currentSaveJson = null;
-let zlibPrefixBytes = new Uint8Array([0x00, 0x9e, 0x01, 0x00]); // default placeholder
 
 /* --- Parsing & Packing Logic --- */
 
@@ -114,9 +113,8 @@ async function parseSaveFile(buffer) {
 
     // Now parse the uncompressed string structure
     const uncompressedDv = new DataView(uncompressed.buffer);
-    
-    // Cache the first 4 bytes just in case Smalland uses them directly
-    zlibPrefixBytes = uncompressed.slice(0, 4);
+    // The first 4 bytes represent (total uncompressed size - 4)
+    // We discard it and re-calculate it on export to prevent memory crashes!
 
     // Let's find the explicit "SMALLAND_PLAYER" string
     let jsonStart = -1;
@@ -536,9 +534,9 @@ function generateRepackedBlob() {
     const uncompressedData = new Uint8Array(prefixLen + utf16Bytes.length);
     const uncompDv = new DataView(uncompressedData.buffer);
     
-    // First 4 mysterious bytes (could be size, maybe not, we just write what we read originally if we want to be safe)
-    // Actually, safer is to just write the ones we extracted exactly (zlibPrefixBytes)
-    uncompressedData.set(zlibPrefixBytes, offset); offset += 4;
+    // First 4 bytes is the length of the data that follows it
+    const innerSize = uncompressedData.length - 4;
+    uncompDv.setInt32(offset, innerSize, true); offset += 4;
     
     uncompDv.setInt32(offset, 16, true); offset += 4;
     
